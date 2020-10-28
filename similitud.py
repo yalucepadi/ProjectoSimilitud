@@ -36,7 +36,7 @@ vec2 = np.array([[0,1,0,1,1]])
 k=cosine_similarity(vec1,vec2)
 print(k)"""
 import  pandas as pd 
-"""
+
 df = pd.read_csv('GB3.csv')
 df.fillna(0)
 Text=df['title'].tolist()
@@ -52,7 +52,6 @@ y=X_tfidf
 
 sims=cosine_similarity(X_tfidf[0:1],X_tfidf)
 print(sims)
-"""
 
 
 

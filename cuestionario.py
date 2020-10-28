@@ -1,68 +1,14 @@
-"""import sqlite3
-import os
-db = os.path.join(os.getcwd(),'mgtests.db3')
-cnx = sqlite3.connect(db)
-cur = cnx.cursor()
-cur.execute('DROP TABLE IF EXISTS preguntas')
-cur.execute('''
-CREATE TABLE preguntas (
-  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  pregunta TEXT NOT NULL,
-  explicacion TEXT
-);''')
-cur.execute('DROP TABLE IF EXISTS respuestas')
-cur.execute('''
-CREATE TABLE respuestas (
-  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  idpregunta INTEGER NOT NULL,
-  respuesta text NOT NULL,
-  correcta INTEGER DEFAULT 0
-);''')
-cnx.commit()
-cur.close()
-cnx.close()
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import  pandas as pd 
+from stop_words import get_stop_words
+stop_words = get_stop_words('spanish')
 
-numpregunta = 1
-letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-correcta = ''
-respuestascorrectas = 0
-respuestasincorrectas = 0
-db = os.path.join(os.getcwd(),'mgtests.db3')
-cnx = sqlite3.connect(db)
-curpreguntas = cnx.cursor()
-currespuestas = cnx.cursor()
-curpreguntas.execute('SELECT * FROM preguntas')
-for pregunta in curpreguntas:
-    print('----------')
-    print('%s> %s' %(numpregunta,pregunta[1]))
-    print('----------')
-    numpregunta+=1
-    currespuestas.execute('SELECT * FROM respuestas WHERE idpregunta=?',str(pregunta[0]))
-    letrarespuesta = 0
-    for respuesta in currespuestas:
-        print('%s> %s' %(letras[letrarespuesta],respuesta[2]))
-        if respuesta[3] == 1:
-            correcta = letras[letrarespuesta]
-        letrarespuesta +=1
-    respuestausuario=input('¿Cual es la respuesta correcta? ')
-    print()
-    if respuestausuario.upper() == correcta:
-        print('%s ->>> ¡Respuesta correcta!' %respuestausuario)
-        respuestascorrectas+=1
-    else:
-        print('¡Error! la respuesta correcta era la %s' % correcta)
-        respuestasincorrectas+=1
-    print('----------')
-    print()
-print('----------')
-print('Test finalizado')
-print('----------')
-print('Respuestas correctas: %s' %respuestascorrectas)
-print('Respuestas incorrectas: %s' %respuestasincorrectas)
+from  sklearn.feature_extraction.text  import CountVectorizer
+vectorizer = CountVectorizer()
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer= TfidfVectorizer()
 
-cnx.commit()
-curpreguntas.close()
-cnx.close()"""
 import mysql.connector
 conexion1=mysql.connector.connect(host="localhost", user="root", passwd="",  database="preguntas")
 cursor1=conexion1.cursor()
@@ -74,10 +20,44 @@ cursor1.execute(sql, datos)
 datos=("En que ciudad  esta la cultura chavin","ancash")
 cursor1.execute(sql, datos)
 """
-cursor1.execute("select pregunta, respuesta from cuestionario")
+"""cursor1.execute("select pregunta, respuesta from cuestionario")
 for fila in cursor1:
     print(fila)
 conexion1.close()    
+"""
+cursor1.execute("select pregunta from cuestionario")
+dataRespuesta=[]
+for fila in cursor1:
+    print(fila)
+    respuesta=input("Ingrese su respuesta:".format(fila))
+    dataRespuesta.append(respuesta)
+    #dataRespuesta[len(dataRespuesta):] = [respuesta]
+    
 
+
+SQL_Query=pd.read_sql_query('''select respuesta from cuestionario''',conexion1)
+    
+df = pd.DataFrame(SQL_Query,columns=['respuesta'])
+df.fillna(0)
+Text= df['respuesta'].tolist()    
+print(Text)
+print(dataRespuesta)
+X_tfidf=vectorizer.fit_transform(Text)
+Y_tfidf=vectorizer.fit_transform(dataRespuesta)
+x=X_tfidf
+y=Y_tfidf
+sims=cosine_similarity(X_tfidf,Y_tfidf)
+
+#print(df)  
+#print(SQL_Query) 
+print(x)
+print(y)
+print(sims)
+    
 conexion1.commit()
-conexion1.close()    
+conexion1.close()  
+
+
+#print(fila)
+
+  
